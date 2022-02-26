@@ -10,16 +10,21 @@
 #define PORT_TCP_SERV 5001
 #define MAXLINEA 500
 #define SERVER_DIR "127.0.0.1"
-int main()
+int main(int argc, char *argv[])
 {
+	if(argc!=2)
+	{
+		printf("No se introdujo el puerto\n");
+		return -1;
+	}
 	int sockfd, n, newsockfd, clilen, childpid;//socket y socket nuevo, longitudes y PID
 	struct sockaddr_in cliente, servidor; //Direcciones de cliente y servidor
 	char linea2[MAXLINEA]="64 bytes from ";//Linea a trasmitir
 	char linea1[MAXLINEA];
 	bzero((char*) &servidor,sizeof(servidor)); //Ponemos a 0 la variable
-
+	int puerto = atoi(argv[1]); //Puerto introducido para el socket
 	servidor.sin_family = AF_INET; //TCP
-	servidor.sin_port = htons(PORT_TCP_SERV); //Puerto
+	servidor.sin_port = htons(puerto); //Puerto
 	servidor.sin_addr.s_addr = INADDR_ANY; //Cualquier cliente a la escucha
 	
 	if((sockfd = socket(AF_INET, SOCK_STREAM, 0))<0)

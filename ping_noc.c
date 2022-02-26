@@ -10,13 +10,11 @@
 #include <netdb.h>
 #include <math.h>
 #include <string.h>
-#define PORT_TCP_SERV 5000
 #define MAXLINEA 500
-#define SERVER_DIR "127.0.0.1"
 
 int main(int argc, char *argv[])
 {
-	if(argc!=3)
+	if(argc!=4)
 	{
 		printf("\nNo se introdujeron el número de argumentos correctamente\n");
 		return -1;
@@ -27,6 +25,7 @@ int main(int argc, char *argv[])
 	int seq=1;
 	int num_pet = atoi(argv[1]); //Numero de peticiones PING
 	int num_pet2=0;
+	int puerto = atoi(argv[3]);
 	char *ip = argv[2]; // URL/IP del servidor
 	int num_failed=0; //Numero de paquetes fallidos
 	int num_rec; //Numero de paquetes recividos
@@ -57,13 +56,11 @@ int main(int argc, char *argv[])
 	}
 	
 	servidor.sin_family = AF_INET;
-	servidor.sin_port = htons(PORT_TCP_SERV);
-	//memcpy(&servidor.sin_addr, host->h_addr_list[0], host->h_length);
+	servidor.sin_port = htons(puerto);
 	servidor.sin_addr = *((struct in_addr *)host->h_addr);
-	//servidor.sin_addr.s_addr = INADDR_ANY;
 	inet_ntop(AF_INET, host->h_addr_list[0],ipstr,16);
 	
-	printf("PING %s (%s) X bytes of data.\n", ip, ipstr);
+	printf("PING %s (%s) %d bytes of data.\n", ip, ipstr, num_pet*64);
 	
 	n=strlen(lineaenv);
 	num_pet2=num_pet;

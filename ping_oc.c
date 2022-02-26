@@ -10,13 +10,11 @@
 #include <netdb.h>
 #include <math.h>
 #include <string.h>
-#define PORT_TCP_SERV 5001
 #define MAXLINEA 500
-#define SERVER_DIR "127.0.0.1"
 
 int main(int argc, char *argv[])
 {
-	if(argc!=3)
+	if(argc!=4)
 	{
 		printf("\nNo se introdujeron el número de argumentos correctamente\n");
 		return -1;
@@ -28,6 +26,7 @@ int main(int argc, char *argv[])
 	int num_pet = atoi(argv[1]); //Numero de peticiones PING
 	int num_pet2=0;
 	char *ip = argv[2]; // URL/IP del servidor
+	int puerto = atoi(argv[3]); //Puerto deseado para el socket
 	int num_failed=0; //Numero de paquetes fallidos
 	int num_rec; //Numero de paquetes recividos
 	int perloss;
@@ -58,11 +57,8 @@ int main(int argc, char *argv[])
 	bzero((char*) &servidor, sizeof(servidor));
 
 	servidor.sin_family = AF_INET;
-	servidor.sin_port = htons(PORT_TCP_SERV);
-	//memcpy(&servidor.sin_addr, host->h_addr_list[0], host->h_length);
+	servidor.sin_port = htons(puerto);
 	servidor.sin_addr = *((struct in_addr *)host->h_addr);
-	//servidor.sin_addr.s_addr = inet_addr(SERVER_DIR);
-	//bcopy(host->h_addr, &servidor.sin_addr.s_addr,host->h_length)
  	
 	//A continuacion se conecta con el servidor
 	printf("Conectando\n");
@@ -75,7 +71,7 @@ int main(int argc, char *argv[])
 	else
 	{
 		inet_ntop(AF_INET, host->h_addr_list[0],ipstr,16);
-		printf("PING %s (%s) X bytes of data.\n", ip, ipstr);//(char*) host->h_addr);
+		printf("PING %s (%s) %d bytes of data.\n", ip, ipstr,num_pet*64);//(char*) host->h_addr);
 	}
 	num_pet2=num_pet;
 	while(num_pet2>0)
