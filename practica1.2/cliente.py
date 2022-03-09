@@ -21,6 +21,9 @@ print("Buen Dia, introduzca su nombre de usuario\n")
 # Nombre de usuario recibido por teclado
 HEADER_LENGTH = 10
 nom_usuario = input()
+
+print(f"Bienvenido {nom_usuario}, si desea enviar un archivo introduzca una f seguida del archivo con su formato\n")
+
 usuario = nom_usuario.encode("utf-8")
 usuario_header = f"{len(usuario):<{HEADER_LENGTH}}".encode("utf-8")
 # Creamos el socket TCP
@@ -40,14 +43,10 @@ sockfd.send(usuario_header + usuario)
 
 # Empieza el chat
 while True:
-    msg = input("{}> ".format(nom_usuario))
-    if msg: #Que no este vacio
-       msg = msg.encode("utf-8")
-       msg_header = f"{len(msg):<{HEADER_LENGTH}}".encode("utf-8")
-       sockfd.send(msg_header + msg)
-
-    try:
-        while True:
+    ready_to_read, ready_to_write, in_error = select.select([sys.stdin,sockfd],[],[],1) #Dejamos un segundo para querer escribir
+   
+    for sock in ready_to_read:
+        if sock is sockfd:
             usuario_header = sockfd.recv(HEADER_LENGTH)
             if not len(usuario_header):
                 print("Cerramos conexion con el servidor")
@@ -61,16 +60,27 @@ while True:
             msg = sockfd.recv(msg_len).decode("utf-8")
 
             print(f"{usuario} > {msg}")
+        else:
+            msg = sys.stdin.readline()
+            if msg: #Que no este vacio
+                if msg[0] == "f":
+                    fichero = input("Introduzca el nombre del fichero con su formato") 
+                    f=open(fichero,'rb')
+                    content = f.read(1024)
+                    
+                    msg_header = f"{len(msg):<{HEADER_LENGTH}}".encode("utf-8")
+                    while content:
+                        sockfd.send(msg_header + content)
+                        content = f.read(1024)
 
-    except IOError as e:
-        if e.errno != errno.EAGAIN and e.errno != errno.EWOULDBLOCK:
-            print("ERROR")
-            sys.exit()
 
-        continue # SI no es una de esas se contuinua
 
-    except Exception as e:
-        print("ERROR")
-        sys.exit()
+
+
+                else:
+                    msg = msg.encode("utf-8")
+                    msg_header = f"{len(msg):<{HEADER_LENGTH}}".encode("utf-8")
+                    sockfd.send(msg_header + msg)
+
 
        

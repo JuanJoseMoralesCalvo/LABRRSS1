@@ -7,11 +7,13 @@ import select
 HEADER_LENGTH = 10
 # Funcion en la que recibimos el mensaje
 def recieve_message(socket_cli):
-    msg_header = socket_cli.recv(HEADER_LENGTH)
+    try:
+        msg_header = socket_cli.recv(HEADER_LENGTH)
 
-    msg_len = int(msg_header.decode("utf-8").strip())
-    return {"header": msg_header, "data": socket_cli.recv(msg_len)}
-
+        msg_len = int(msg_header.decode("utf-8").strip())
+        return {"header": msg_header, "data": socket_cli.recv(msg_len)}
+    except:
+        return False
 # Comprobamos numero de argumentos
 n_arg = len(sys.argv)
 if(n_arg!=2):
