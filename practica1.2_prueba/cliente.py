@@ -35,7 +35,7 @@ server_address = (ip, puerto)
 
 # Realizamos el connect
 sockfd.connect(server_address)
-sockfd.setblocking(False)
+#sockfd.setblocking(False)
 
 
 # Empieza el chat
@@ -48,20 +48,33 @@ while True:
             
             msg = sockfd.recv(1024).decode("utf-8")
             if msg:
-                print(f"{msg}")
+                if msg[0] == "f":
+                    with open('rec.txt','w') as f:
+                        while msg[0] != "r":
+                            msg = sockfd.recv(1024)
+                            msg = msg.decode("utf-8")
+                            f.write(msg)
+                            print(f"{msg}")
+
+                else:
+                    print(f"{msg}")
         else:
             msg = sys.stdin.readline()
             if msg: #Que no este vacio
                 if msg[0] == "f":
-                    fichero = input("Introduzca el nombre del fichero con su formato") 
+                    aux = msg.split()
+                    fichero = str(aux[1])
                     f=open(fichero,'rb')
                     content = f.read(1024)
-                    
+                    content_utf = content.decode("utf-8")
+                    msg = (nom_usuario+": "+content_utf)
+                    sockfd.send("f".encode("utf-8"))
                     while content:
-                        sockfd.send(content)
+                        sockfd.send(msg.encode("utf-8"))
                         content = f.read(1024)
-
-
+                        content_utf = content.decode("utf-8")
+                        msg = (nom_usuario+": "+content_utf)
+                    sockfd.send("r".encode("utf-8"))
 
 
                 else:
