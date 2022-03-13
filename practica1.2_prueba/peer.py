@@ -3,15 +3,9 @@ import sys
 import time
 import select
 import errno
-import threading as th
+import pickle
 
-#def introducir_mensaje():
- #   return input()
 
-#timeout=4
-#t=th.Timer(timeout,introducir_mensaje)
-
-# Comprobamos numero de argumentos
 n_arg = len(sys.argv)
 if(n_arg!=3):
     sys.exit('Numero de argumentos erroneo\n')
@@ -36,45 +30,60 @@ server_address = (ip, puerto)
 sockfd.connect(server_address)
 #sockfd.setblocking(False)
 
-lista_socket= [sockfd]
-lista_ip = []
-lista_puerto = []
+#Primero recibimos la lista de clientes una vez nos conectamos
 
-msg_ini = (f"{ip},{puerto}")
+lista_de_clientes = pickle.loads(sockfd.recv(1024)) # Recibimos el numero de clientes
+tam_lista = len(lista_de_clientes)
+
+#Enviamos nuestra direccion y puerto al servidor
+sockcli = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+sockcli.bind(('',0)) #Random port and every ip
+sockcli.listen(5)
+
+ip_cliente, puerto_cliente = sockcli.getsockname() 
+cliente = ([ip_cliente],[puerto_cliente])
+cliente_string = pickle.dumps(cliente)
+sockfd.send(cliente_string)
 
 
-msg = sockfd.recv(1024).decode("utf-8") # Recibimos la ip y puerto del resto de clientes
-_,ip, puerto = msg.split(" ") # Primero IP y despues PUERTO
-lista_ip.append(ip)
-lista_puerto.append(puerto)
-i=0
+lista_socket= [sys.stdin,sockfd,sockcli]
 
-for socket in lista_socket:
-    socket.connect((lista_ip[i],lista_puerto[i]))
-    i++
+    
+
+
+if tam_lista == 0:
+    print("Es usted el primer usuario en el chat, espere a que alguien se conecte\n")
+    
+#La primera vez que nos conectamos al chat realizamos la conexion con los peers
+else:
+    print(lista_de_clientes)
+    for i in range(tam_lista):
+        socket_clientes = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        socket_clientes.connect((lista_de_clientes[i][0],lista_de_clientes[i][1]))
+        print(f"Conectado a {lista_de_clientes[i][0]}:{lista_de_clientes[i][1]}")
+        lista_socket.append(socket_clientes)
 # Empieza el chat
 while True:
-    ready_to_read, ready_to_write, error = select.select([sys.stdin,lista_socket],[],[],1)
+    ready_to_read, ready_to_write, error = select.select(lista_socket,[],[],1)
     
     for sock in ready_to_read:
-        if sock is sockfd: # NOS HABLA EL SERVIDOR PARA AÑADIR O REMOVER CLIENTES
-            
+        if sock is sockcli:
+            socket_cliente, dir_cliente = sock.accept()
+            lista_socket.append(socket_cliente)
 
-            msg_nuevo = sockfd.recv(1024).decode("utf-8") # Recibimos la ip y puerto del resto de clientes
-            if msg_nuevo:
-                if msg_nuevo[0] == "a":
-                    _,ip, puerto = msg_nuevo.split(" ") # Primero IP y despues PUERTO
-                    lista_ip.append(ip)
-                    lista_puerto.append(puerto)
-                    socket_cliente, dir_cliente = sock.accept()
-                    lista_socket.append(socket_cliente)
-                if msg_nuevo[0] == "r":
-                    _,ip, puerto = socketnuevo.split(" ") # Primero IP y despues PUERTO
-                    lista_ip.remove(ip)
-                    lista_puerto.remove(puerto)
-                    socket_cliente, dir_cliente = sock.close()
-        
         else: # HABLAMOS CON CLIENTES
+            if sock is sys.stdin:
+                msg = sys.stdin.readline()
+                if msg:
+                    msg_env = nom_usuario +": "+msg
+                    for socket in lista_socket:
+                        if socket != sockfd and socket != sockcli:
+                            socket.send(msg_env.encode("utf-8"))
+            else:
+                msg = sock.recv(1024).decode("utf-8")
+                print(f"{msg}")
+
+                    
 
 
 
