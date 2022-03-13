@@ -20,7 +20,7 @@ sockfd.listen(5)
 
 lista_sockets = [sockfd] #Creamos una lista de sockets para usuarios que se van uniendo
 lista_clientes = []
-lista_ip_puertos =
+lista_ip_y_puertos = []
 
 
 while True:
@@ -42,7 +42,7 @@ while True:
                 lista_ip_y_puertos = pickle.loads(datos)
                 for socket in lista_sockets:
                     if socket != sockfd and socket !=sock:
-                        socket.send(lista_ip_y_puertos)
+                        socket.send(datos)
 
 
 

@@ -49,20 +49,21 @@ sockfd.send(cliente_string)
 lista_socket= [sys.stdin,sockfd,sockcli]
 
     
-
+print(lista_de_clientes)
+i=0
 
 if tam_lista == 0:
     print("Es usted el primer usuario en el chat, espere a que alguien se conecte\n")
     
 #La primera vez que nos conectamos al chat realizamos la conexion con los peers
 else:
-    print(lista_de_clientes)
-    for i in range(tam_lista):
+    for i in range(tam_lista-1):
         socket_clientes = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        socket_clientes.connect((lista_de_clientes[i][0],lista_de_clientes[i][1]))
-        print(f"Conectado a {lista_de_clientes[i][0]}:{lista_de_clientes[i][1]}")
+        socket_clientes.connect((lista_de_clientes[0][i],lista_de_clientes[1][i]))
+        print(f"Conectado a {lista_de_clientes[0][i]}:{lista_de_clientes[1][i]}")
         lista_socket.append(socket_clientes)
 # Empieza el chat
+c=0
 while True:
     ready_to_read, ready_to_write, error = select.select(lista_socket,[],[],1)
     
@@ -70,6 +71,7 @@ while True:
         if sock is sockcli:
             socket_cliente, dir_cliente = sock.accept()
             lista_socket.append(socket_cliente)
+            c=0
 
         else: # HABLAMOS CON CLIENTES
             if sock is sys.stdin:
@@ -77,11 +79,16 @@ while True:
                 if msg:
                     msg_env = nom_usuario +": "+msg
                     for socket in lista_socket:
-                        if socket != sockfd and socket != sockcli:
+                        if socket != sockfd and socket != sockcli and socket != sys.stdin:
                             socket.send(msg_env.encode("utf-8"))
             else:
-                msg = sock.recv(1024).decode("utf-8")
-                print(f"{msg}")
+                if c==0:
+                    msg = sock.recv(1024)
+                    print(f"Recibi la conexión")
+                    c=1
+                else:
+                    msg = sock.recv(1024).decode("utf-8")
+                    print(f"{msg}")
 
                     
 
