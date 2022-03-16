@@ -33,16 +33,25 @@ while True:
             socket_cliente.send(cliente_string)
             lista_sockets.append(socket_cliente)
             lista_clientes.append(sock)
-            
+            print(lista_ip_y_puertos) 
         else:
             #Datos recibidos de un cliente
             datos = sock.recv(1024)
             if datos:
                 #Nuevo cliente nos envia direccion y puerto
-                lista_ip_y_puertos = pickle.loads(datos)
+                li = pickle.loads(datos)
+                lista_ip_y_puertos.append(li)
                 for socket in lista_sockets:
                     if socket != sockfd and socket !=sock:
                         socket.send(datos)
+
+            else:
+                print(lista_ip_y_puertos) 
+
+                elim = lista_sockets.index((sock))
+                lista_ip_y_puertos.pop(elim-1)
+                lista_sockets.remove(sock)
+                sock.close()
 
 
 

@@ -41,13 +41,14 @@ sockcli.bind(('',0)) #Random port and every ip
 sockcli.listen(5)
 
 ip_cliente, puerto_cliente = sockcli.getsockname() 
-cliente = ([ip_cliente],[puerto_cliente])
+cliente = (ip_cliente,puerto_cliente)
 cliente_string = pickle.dumps(cliente)
 sockfd.send(cliente_string)
 
 
 lista_socket= [sys.stdin,sockfd,sockcli]
 
+desconexion_cliente = "D"
     
 print(lista_de_clientes)
 i=0
@@ -57,13 +58,14 @@ if tam_lista == 0:
     
 #La primera vez que nos conectamos al chat realizamos la conexion con los peers
 else:
-    for i in range(tam_lista-1):
+    for i in range(len(lista_de_clientes)):
+        print(i)
         socket_clientes = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        socket_clientes.connect((lista_de_clientes[0][i],lista_de_clientes[1][i]))
-        print(f"Conectado a {lista_de_clientes[0][i]}:{lista_de_clientes[1][i]}")
+        socket_clientes.connect((lista_de_clientes[i][0],lista_de_clientes[i][1]))
+        print(f"Conectado a {lista_de_clientes[i][0]}:{lista_de_clientes[i][1]}")
         lista_socket.append(socket_clientes)
 # Empieza el chat
-c=0
+
 while True:
     ready_to_read, ready_to_write, error = select.select(lista_socket,[],[],1)
     
@@ -71,7 +73,7 @@ while True:
         if sock is sockcli:
             socket_cliente, dir_cliente = sock.accept()
             lista_socket.append(socket_cliente)
-            c=0
+            print("Un nuevo cliente se conecto a esta sala, Salude!")
 
         else: # HABLAMOS CON CLIENTES
             if sock is sys.stdin:
@@ -82,13 +84,17 @@ while True:
                         if socket != sockfd and socket != sockcli and socket != sys.stdin:
                             socket.send(msg_env.encode("utf-8"))
             else:
-                if c==0:
-                    msg = sock.recv(1024)
-                    print(f"Recibi la conexión")
-                    c=1
-                else:
+                try:
                     msg = sock.recv(1024).decode("utf-8")
-                    print(f"{msg}")
+                    if msg:
+                        print(f"{msg}")
+                    else:
+                        lista_socket.remove(sock)
+                        print("Un cliente se desconecto de la sala de chat")
+                        
+
+                except:
+                    continue
 
                     
 
