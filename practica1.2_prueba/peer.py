@@ -4,7 +4,7 @@ import time
 import select
 import errno
 import pickle
-
+import json
 
 n_arg = len(sys.argv)
 if(n_arg!=3):
@@ -32,7 +32,7 @@ sockfd.connect(server_address)
 
 #Primero recibimos la lista de clientes una vez nos conectamos
 
-lista_de_clientes = pickle.loads(sockfd.recv(1024)) # Recibimos el numero de clientes
+lista_de_clientes = json.loads(sockfd.recv(1024)) # Recibimos el numero de clientes
 tam_lista = len(lista_de_clientes)
 
 #Enviamos nuestra direccion y puerto al servidor
@@ -41,9 +41,9 @@ sockcli.bind(('',0)) #Random port and every ip
 sockcli.listen(5)
 
 ip_cliente, puerto_cliente = sockcli.getsockname() 
-cliente = (ip_cliente,puerto_cliente)
-cliente_string = pickle.dumps(cliente)
-sockfd.send(cliente_string)
+cliente = {"ip":ip_cliente, "puerto":puerto_cliente}
+cliente_string = json.dumps(cliente)
+sockfd.send(cliente_string.encode("utf-8"))
 
 
 lista_socket= [sys.stdin,sockfd,sockcli]
@@ -58,11 +58,10 @@ if tam_lista == 0:
     
 #La primera vez que nos conectamos al chat realizamos la conexion con los peers
 else:
-    for i in range(len(lista_de_clientes)):
-        print(i)
+    for i in lista_de_clientes.values():
         socket_clientes = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        socket_clientes.connect((lista_de_clientes[i][0],lista_de_clientes[i][1]))
-        print(f"Conectado a {lista_de_clientes[i][0]}:{lista_de_clientes[i][1]}")
+        socket_clientes.connect((i["ip"],i["puerto"]))
+       # print(f"Conectado a {lista_de_clientes["cliente"+str(i)]["ip"]}:{lista_de_clientes["cliente"+str(i)]["puerto"]}")
         lista_socket.append(socket_clientes)
 # Empieza el chat
 
@@ -79,10 +78,15 @@ while True:
             if sock is sys.stdin:
                 msg = sys.stdin.readline()
                 if msg:
-                    msg_env = nom_usuario +": "+msg
-                    for socket in lista_socket:
-                        if socket != sockfd and socket != sockcli and socket != sys.stdin:
-                            socket.send(msg_env.encode("utf-8"))
+                    if msg == "exit\n":
+                        sockfd.send(msg.encode("utf-8"))
+                        sys.exit()
+
+                    else:
+                        msg_env = nom_usuario +": "+msg
+                        for socket in lista_socket:
+                            if socket != sockfd and socket != sockcli and socket != sys.stdin:
+                                socket.send(msg_env.encode("utf-8"))
             else:
                 try:
                     msg = sock.recv(1024).decode("utf-8")

@@ -3,6 +3,7 @@ import sys
 import time
 import select
 import pickle
+import json
 n_arg = len(sys.argv)
 if(n_arg!=2):
         sys.exit('Numero de argumentos erroneo\n')
@@ -20,38 +21,50 @@ sockfd.listen(5)
 
 lista_sockets = [sockfd] #Creamos una lista de sockets para usuarios que se van uniendo
 lista_clientes = []
-lista_ip_y_puertos = []
+lista_ip_y_puertos = {}
 
 
+i= 0
 while True:
     ready_to_read, ready_to_write, in_error = select.select(lista_sockets, lista_clientes, lista_sockets,1)
     for sock in ready_to_read:
         if sock is sockfd:
             #Nuevo usuario
             socket_cliente, dir_cliente = sock.accept()
-            cliente_string = pickle.dumps(lista_ip_y_puertos)
-            socket_cliente.send(cliente_string)
+            cliente_string = json.dumps(lista_ip_y_puertos)
+            socket_cliente.send(cliente_string.encode("utf-8"))
             lista_sockets.append(socket_cliente)
             lista_clientes.append(sock)
             print(lista_ip_y_puertos) 
+            i = i+1 
         else:
             #Datos recibidos de un cliente
             datos = sock.recv(1024)
             if datos:
                 #Nuevo cliente nos envia direccion y puerto
-                li = pickle.loads(datos)
-                lista_ip_y_puertos.append(li)
-                for socket in lista_sockets:
-                    if socket != sockfd and socket !=sock:
-                        socket.send(datos)
+                exit = datos.decode("utf-8")
+                if exit == "exit\n":
+                    elim = lista_sockets.index((sock))
+                    del lista_ip_y_puertos["cliente"+str(elim)]
+                    lista_sockets.remove(sock)
+                    sock.close()
+                    i = i -1
+                else:
+                    li = json.loads(datos)
+                    lista_ip_y_puertos["cliente"+str(i)] = li 
+                    for socket in lista_sockets:
+                        if socket != sockfd and socket !=sock:
+                            socket.send(datos)
 
-            else:
-                print(lista_ip_y_puertos) 
+        #    else:
+         #       print(lista_ip_y_puertos) 
 
-                elim = lista_sockets.index((sock))
-                lista_ip_y_puertos.pop(elim-1)
-                lista_sockets.remove(sock)
-                sock.close()
+          #      elim = lista_sockets.index((sock))
+           #     elim_usuario = elim - 1
+            #    del lista_ip_y_puertos["cliente"+str(elim_usuario)]
+             #   lista_sockets.remove(sock)
+              #  i = len(lista_ip_y_puertos)
+               # sock.close()
 
 
 
