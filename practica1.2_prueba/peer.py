@@ -3,7 +3,6 @@ import sys
 import time
 import select
 import errno
-import pickle
 import json
 
 n_arg = len(sys.argv)
@@ -13,7 +12,6 @@ if(n_arg!=3):
 print("Buen Dia, introduzca su nombre de usuario\n")
 
 # Nombre de usuario recibido por teclado
-HEADER_LENGTH = 10
 nom_usuario = input()
 
 print(f"Bienvenido {nom_usuario}, si desea enviar un archivo introduzca una f seguida del archivo con su formato\n")
@@ -29,7 +27,7 @@ server_address = (ip, puerto)
 # Realizamos el connect
 sockfd.connect(server_address)
 #sockfd.setblocking(False)
-
+sockfd.send(nom_usuario.encode("utf-8"))
 #Primero recibimos la lista de clientes una vez nos conectamos
 
 lista_de_clientes = json.loads(sockfd.recv(1024)) # Recibimos el numero de clientes

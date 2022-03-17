@@ -2,7 +2,6 @@ import socket
 import sys
 import time
 import select
-import pickle
 import json
 n_arg = len(sys.argv)
 if(n_arg!=2):
@@ -22,7 +21,7 @@ sockfd.listen(5)
 lista_sockets = [sockfd] #Creamos una lista de sockets para usuarios que se van uniendo
 lista_clientes = []
 lista_ip_y_puertos = {}
-
+lista_de_nombres = ["servidor"]
 
 i= 0
 while True:
@@ -31,6 +30,8 @@ while True:
         if sock is sockfd:
             #Nuevo usuario
             socket_cliente, dir_cliente = sock.accept()
+            nom_usuario = socket_cliente.recv(1024).decode("utf-8")
+            lista_de_nombres.append(nom_usuario)
             cliente_string = json.dumps(lista_ip_y_puertos)
             socket_cliente.send(cliente_string.encode("utf-8"))
             lista_sockets.append(socket_cliente)
@@ -45,13 +46,14 @@ while True:
                 exit = datos.decode("utf-8")
                 if exit == "exit\n":
                     elim = lista_sockets.index((sock))
-                    del lista_ip_y_puertos["cliente"+str(elim)]
+                    del lista_ip_y_puertos[lista_de_nombres[elim]]
                     lista_sockets.remove(sock)
+                    lista_de_nombres.remove(lista_de_nombres[elim])
                     sock.close()
                     i = i -1
                 else:
                     li = json.loads(datos)
-                    lista_ip_y_puertos["cliente"+str(i)] = li 
+                    lista_ip_y_puertos[lista_de_nombres[i]] = li 
                     for socket in lista_sockets:
                         if socket != sockfd and socket !=sock:
                             socket.send(datos)
