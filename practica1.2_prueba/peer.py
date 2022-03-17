@@ -79,7 +79,30 @@ while True:
                     if msg == "exit\n":
                         sockfd.send(msg.encode("utf-8"))
                         sys.exit()
+                    elif msg[0] == "f":
+                        print("Mandando fichero\n")
+                        aux = msg.split()
+                        fichero = str(aux[1])
+                        f = open(fichero,'rb')
+                        content = f.read(1024)
+                        content_utf = content.decode("utf-8")
+                        for socket in lista_socket:
+                            if socket != sockfd and socket != sockcli and socket != sys.stdin:
+                                socket.send("f".encode("utf-8"))
 
+                        time.sleep(1)
+                        while content:
+                            print("Proceso de mandado\n")
+                            for socket in lista_socket:
+                                if socket != sockfd and socket != sockcli and socket != sys.stdin:
+                                    socket.send(content)
+                            content = f.read(1024)
+                        print("FINALIZADO PROCESO DE MANDADO\n")
+                        time.sleep(1)
+                        for socket in lista_socket:
+                            if socket != sockfd and socket != sockcli and socket != sys.stdin:
+                                socket.send("r".encode("utf-8"))
+                    
                     else:
                         msg_env = nom_usuario +": "+msg
                         for socket in lista_socket:
@@ -89,7 +112,17 @@ while True:
                 try:
                     msg = sock.recv(1024).decode("utf-8")
                     if msg:
-                        print(f"{msg}")
+                        if msg[0] == "f":
+                            print("Iniciamos proceso de escritura\n")
+                            with open('rec2.txt','w') as f:
+                                while msg[0] != "r":
+                                    msg = sock.recv(1024)
+                                    msg = msg.decode("utf-8")
+                                    f.write(msg)
+                                    print("Fichero recibido\n")
+
+                        else:
+                            print(f"{msg}")
                     else:
                         lista_socket.remove(sock)
                         print("Un cliente se desconecto de la sala de chat")
