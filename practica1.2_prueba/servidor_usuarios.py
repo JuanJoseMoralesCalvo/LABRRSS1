@@ -4,10 +4,10 @@ import time
 import select
 import json
 n_arg = len(sys.argv)
-if(n_arg!=2):
+if(n_arg!=3):
         sys.exit('Numero de argumentos erroneo\n')
 
-
+password_chat = str(sys.argv[2])
 # Creamos socket y igualamos el puerto a usar
 sockfd = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 sockfd.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR,1) # Nos permite reconectarnos
@@ -30,14 +30,20 @@ while True:
         if sock is sockfd:
             #Nuevo usuario
             socket_cliente, dir_cliente = sock.accept()
-            nom_usuario = socket_cliente.recv(1024).decode("utf-8")
-            lista_de_nombres.append(nom_usuario)
-            cliente_string = json.dumps(lista_ip_y_puertos)
-            socket_cliente.send(cliente_string.encode("utf-8"))
-            lista_sockets.append(socket_cliente)
-            lista_clientes.append(sock)
-            print(lista_ip_y_puertos) 
-            i = i+1 
+            aux = socket_cliente.recv(1024).decode("utf-8")
+            aux_sep = aux.split(" ")
+            nom_usuario = aux_sep[0]
+            password = aux_sep[1]
+            if password == password_chat:
+                lista_de_nombres.append(nom_usuario)
+                cliente_string = json.dumps(lista_ip_y_puertos)
+                socket_cliente.send(cliente_string.encode("utf-8"))
+                lista_sockets.append(socket_cliente)
+                lista_clientes.append(sock)
+                print(lista_ip_y_puertos) 
+                i = i+1 
+            else:
+                socket_cliente.send("y".encode("utf-8"))
         else:
             #Datos recibidos de un cliente
             datos = sock.recv(1024)

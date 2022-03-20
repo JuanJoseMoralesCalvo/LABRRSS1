@@ -9,12 +9,12 @@ n_arg = len(sys.argv)
 if(n_arg!=3):
     sys.exit('Numero de argumentos erroneo\n')
 
-print("Buen Dia, introduzca su nombre de usuario\n")
+print("Buen Dia, introduzca su nombre de usuario seguido del PIN de la sala del chat\n")
 
 # Nombre de usuario recibido por teclado
 nom_usuario = input()
-
-print(f"Bienvenido {nom_usuario}, si desea enviar un archivo introduzca una f seguida del archivo con su formato\n")
+aux = nom_usuario.split()
+nom = aux[0]
 
 # Creamos el socket TCP
 sockfd = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -29,8 +29,13 @@ sockfd.connect(server_address)
 #sockfd.setblocking(False)
 sockfd.send(nom_usuario.encode("utf-8"))
 #Primero recibimos la lista de clientes una vez nos conectamos
+toma = sockfd.recv(1024)
+pass_check = toma.decode("utf-8")
+if pass_check == "y":
+    sys.exit("Contraseña erronea vuelva a intentar acceder de nuevo\n")
 
-lista_de_clientes = json.loads(sockfd.recv(1024)) # Recibimos el numero de clientes
+print(f"Bienvenido {nom_usuario}, si desea enviar un archivo introduzca una f seguida del archivo con su formato\n")
+lista_de_clientes = json.loads(toma) # Recibimos el numero de clientes
 tam_lista = len(lista_de_clientes)
 
 #Enviamos nuestra direccion y puerto al servidor
@@ -92,7 +97,6 @@ while True:
 
                         time.sleep(1)
                         while content:
-                            print("Proceso de mandado\n")
                             for socket in lista_socket:
                                 if socket != sockfd and socket != sockcli and socket != sys.stdin:
                                     socket.send(content)
@@ -104,7 +108,7 @@ while True:
                                 socket.send("r".encode("utf-8"))
                     
                     else:
-                        msg_env = nom_usuario +": "+msg
+                        msg_env = nom +": "+msg
                         for socket in lista_socket:
                             if socket != sockfd and socket != sockcli and socket != sys.stdin:
                                 socket.send(msg_env.encode("utf-8"))
@@ -113,14 +117,13 @@ while True:
                     msg = sock.recv(1024).decode("utf-8")
                     if msg:
                         if msg[0] == "f":
-                            print("Iniciamos proceso de escritura\n")
                             with open('rec2.txt','w') as f:
                                 while msg[0] != "r":
                                     msg = sock.recv(1024)
                                     msg = msg.decode("utf-8")
                                     f.write(msg)
-                                    print("Fichero recibido\n")
-
+                            
+                            print("Fichero recibido\n")
                         else:
                             print(f"{msg}")
                     else:
