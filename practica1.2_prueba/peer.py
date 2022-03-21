@@ -9,13 +9,14 @@ n_arg = len(sys.argv)
 if(n_arg!=3):
     sys.exit('Numero de argumentos erroneo\n')
 
-print("Buen Dia, introduzca su nombre de usuario seguido del PIN de la sala del chat\n")
+print("Buen Dia, introduzca su nombre de usuario.\n")
 
 # Nombre de usuario recibido por teclado
 nom_usuario = input()
 aux = nom_usuario.split()
 nom = aux[0]
 
+#Preguntamos si desea crear una sala o unirse a otra
 # Creamos el socket TCP
 sockfd = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 # IP del servidor y puerto
@@ -27,12 +28,20 @@ server_address = (ip, puerto)
 # Realizamos el connect
 sockfd.connect(server_address)
 #sockfd.setblocking(False)
-sockfd.send(nom_usuario.encode("utf-8"))
+sala = int(input("Pulse el numero '1' si desea crear una sala y pulse el numero '2' si desea unirse a una sala existente\n"))
+if sala == 1:
+    sala_nombre_pass = input("Introduzca el nombre de la sala que desea crear, seguido de su contraseña\n")
+    mensaje = nom_usuario+" "+sala_nombre_pass+" n "
+    sockfd.send(mensaje.encode("utf-8"))
+else:
+    sala_nombre_pass = input("Introduzca el nombre de la sala a la que desea unirse, seguido de su contraseña\n")
+    mensaje = nom_usuario+" "+sala_nombre_pass+" u "
+    sockfd.send(mensaje.encode("utf-8"))
 #Primero recibimos la lista de clientes una vez nos conectamos
 toma = sockfd.recv(1024)
 pass_check = toma.decode("utf-8")
 if pass_check == "y":
-    sys.exit("Contraseña erronea vuelva a intentar acceder de nuevo\n")
+    sys.exit("Contraseña y/o nombre de la sala incorrecta.\n")
 
 print(f"Bienvenido {nom_usuario}, si desea enviar un archivo introduzca una f seguida del archivo con su formato\n")
 lista_de_clientes = json.loads(toma) # Recibimos el numero de clientes

@@ -22,8 +22,10 @@ lista_sockets = [sockfd] #Creamos una lista de sockets para usuarios que se van 
 lista_clientes = []
 lista_ip_y_puertos = {}
 lista_de_nombres = ["servidor"]
-
+lista_de_salas = ["servidor"]
+lista_de_salas_nuevas = {}
 i= 0
+c=0
 while True:
     ready_to_read, ready_to_write, in_error = select.select(lista_sockets, lista_clientes, lista_sockets,1)
     for sock in ready_to_read:
@@ -32,18 +34,37 @@ while True:
             socket_cliente, dir_cliente = sock.accept()
             aux = socket_cliente.recv(1024).decode("utf-8")
             aux_sep = aux.split(" ")
-            nom_usuario = aux_sep[0]
-            password = aux_sep[1]
-            if password == password_chat:
-                lista_de_nombres.append(nom_usuario)
-                cliente_string = json.dumps(lista_ip_y_puertos)
-                socket_cliente.send(cliente_string.encode("utf-8"))
-                lista_sockets.append(socket_cliente)
-                lista_clientes.append(sock)
-                print(lista_ip_y_puertos) 
-                i = i+1 
+            nom_usuario = str(aux_sep[0])
+            nom_sala = str(aux_sep[1])
+            password = str(aux_sep[2])
+            nueva_o_existente = str(aux_sep[3])
+            if nueva_o_existente == "u": # ya existe la sala
+                for i in lista_de_salas:
+                    if i[0] == nom_sala and i[1] == password:
+                        c=1
+                    
+                        
+                if c==1:
+                    lista_de_nombres.append((nom_usuario, nom_sala))
+                    cliente_string = json.dumps(lista_ip_y_puertos[nom_sala])
+                    socket_cliente.send(cliente_string.encode("utf-8"))
+                    lista_sockets.append(socket_cliente)
+                    lista_clientes.append(sock)
+                    print(lista_ip_y_puertos)
+                    print(lista_de_salas)
+                    c=0
+                else:
+                    socket_cliente.send("y".encode("utf-8"))
             else:
-                socket_cliente.send("y".encode("utf-8"))
+                lista_de_nombres.append((nom_usuario, nom_sala))
+                lista_de_salas.append((nom_sala,password))
+                lista_sockets.append(socket_cliente)
+                lista_ip_y_puertos[nom_sala]={}
+                lista_clientes.append(sock)
+                cliente_string = json.dumps(lista_de_salas_nuevas)
+                socket_cliente.send(cliente_string.encode("utf-8"))
+                 
+
         else:
             #Datos recibidos de un cliente
             datos = sock.recv(1024)
@@ -52,27 +73,18 @@ while True:
                 exit = datos.decode("utf-8")
                 if exit == "exit\n":
                     elim = lista_sockets.index((sock))
-                    del lista_ip_y_puertos[lista_de_nombres[elim]]
+                    del lista_ip_y_puertos[lista_de_nombres[elim][1]][lista_de_nombres[elim][0]]
                     lista_sockets.remove(sock)
                     lista_de_nombres.remove(lista_de_nombres[elim])
                     sock.close()
-                    i = i -1
                 else:
                     li = json.loads(datos)
-                    lista_ip_y_puertos[lista_de_nombres[i]] = li 
+                    lista_ip_y_puertos[nom_sala][nom_usuario]=li
                     for socket in lista_sockets:
                         if socket != sockfd and socket !=sock:
                             socket.send(datos)
 
-        #    else:
-         #       print(lista_ip_y_puertos) 
 
-          #      elim = lista_sockets.index((sock))
-           #     elim_usuario = elim - 1
-            #    del lista_ip_y_puertos["cliente"+str(elim_usuario)]
-             #   lista_sockets.remove(sock)
-              #  i = len(lista_ip_y_puertos)
-               # sock.close()
 
 
 
