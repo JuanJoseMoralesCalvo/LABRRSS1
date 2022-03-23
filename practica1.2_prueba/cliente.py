@@ -5,13 +5,6 @@ import select
 import errno
 import threading as th
 
-#def introducir_mensaje():
- #   return input()
-
-#timeout=4
-#t=th.Timer(timeout,introducir_mensaje)
-
-# Comprobamos numero de argumentos
 n_arg = len(sys.argv)
 if(n_arg!=3):
     sys.exit('Numero de argumentos erroneo\n')
@@ -19,7 +12,6 @@ if(n_arg!=3):
 print("Buen Dia, introduzca su nombre de usuario\n")
 
 # Nombre de usuario recibido por teclado
-HEADER_LENGTH = 10
 nom_usuario = input()
 
 print(f"Bienvenido {nom_usuario}, si desea enviar un archivo introduzca una f seguida del archivo con su formato\n")
@@ -66,14 +58,10 @@ while True:
                     fichero = str(aux[1])
                     f=open(fichero,'rb')
                     content = f.read(1024)
-                    content_utf = content.decode("utf-8")
-                    msg = (nom_usuario+": "+content_utf)
                     sockfd.send("f".encode("utf-8"))
                     while content:
-                        sockfd.send(msg.encode("utf-8"))
+                        sockfd.send(content)
                         content = f.read(1024)
-                        content_utf = content.decode("utf-8")
-                        msg = (nom_usuario+": "+content_utf)
                     sockfd.send("r".encode("utf-8"))
 
 
