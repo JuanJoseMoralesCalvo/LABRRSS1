@@ -1,6 +1,6 @@
 import socket 
 
-host , port = '127.0.0.1' , 8888
+host , port = '0.0.0.0' , 8888
 
 serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 serversocket.setsockopt(socket.SOL_SOCKET , socket.SO_REUSEADDR , 1)
@@ -11,15 +11,15 @@ print('servidor en el puerto',port)
 while True:
     connection , address = serversocket.accept()
     request = connection.recv(1024).decode('utf-8')
-    #print(request)
-    string_list = request.split(' ')
+    print(request)
+    string_list = request.split('\n')
     method = string_list[0]
-    requesting_file = string_list[1]
+    aux = method.split(" ")
+    requesting_file = aux[1]
+    print(string_list)
+    print('Client request \n')
 
-    print('Client request',requesting_file)
-
-    myfile = requesting_file.split('?')[0]
-    myfile = myfile.lstrip('/')
+    myfile=requesting_file[1:]
 
     if(myfile == ''):
         myfile = 'index.html'
