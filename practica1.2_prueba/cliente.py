@@ -46,7 +46,7 @@ while True:
                             msg = sockfd.recv(1024)
                             msg = msg.decode("utf-8")
                             f.write(msg)
-                            print(f"{msg}")
+                            #print(f"{msg}")
 
                 else:
                     print(f"{msg}")
