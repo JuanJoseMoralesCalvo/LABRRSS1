@@ -1,5 +1,6 @@
 import socket 
 import select
+import requests
 
 host , port = '0.0.0.0' , 8888
 
@@ -32,39 +33,47 @@ while True:
 
                 if(myfile == ''):
                     myfile = 'index.html'
-
-                try:
-                    file = open(myfile , 'rb')
-                    response = file.read()
-                    file.close()
-
+                elif myfile[0:3] == "htt":
+                    r = requests.get(myfile)
+                    r = r.text
                     header = 'HTTP/1.1 200 OK\n'
-
-                    if(myfile.endswith('.jpg')):
-                        mimetype = 'image/jpg'
-                    elif(myfile.endswith('.css')):
-                        mimetype = 'text/css'
-                    elif(myfile.endswith('.pdf')):
-                        mimetype = 'application/pdf'
-                    else:
-                        mimetype = 'text/html'
-
+                    mimetype = 'text/html'
                     header += 'Content-Type: '+str(mimetype)+'\n\n'
-
-                except Exception as e:
-                    print("-")
-                    header = 'HTTP/1.1 404 Not Found\n\n'
-                    response = '<html><body>Error 404: File not found</body></html>'.encode('utf-8')
-
-                final_response = header.encode('utf-8')
-                final_response += response
-                sock.send(final_response)
-                print(aux2[1])
-                if aux2[1] == "keep-alive\r":
-                    continue
+                    responde = header+r
+                    sock.send(responde.encode())
                 else:
-                    socket_list.remove(sock)
-                    sock.close()
+                    try:
+                        file = open(myfile , 'rb')
+                        response = file.read()
+                        file.close()
+
+                        header = 'HTTP/1.1 200 OK\n'
+
+                        if(myfile.endswith('.jpg')):
+                            mimetype = 'image/jpg'
+                        elif(myfile.endswith('.css')):
+                            mimetype = 'text/css'
+                        elif(myfile.endswith('.pdf')):
+                            mimetype = 'application/pdf'
+                        else:
+                            mimetype = 'text/html'
+
+                        header += 'Content-Type: '+str(mimetype)+'\n\n'
+
+                    except Exception as e:
+                        print("-")
+                        header = 'HTTP/1.1 404 Not Found\n\n'
+                        response = '<html><body>Error 404: File not found</body></html>'.encode('utf-8')
+
+                    final_response = header.encode('utf-8')
+                    final_response += response
+                    sock.send(final_response)
+                    print(aux2[1])
+                    if aux2[1] == "keep-alive\r":
+                        continue
+                    else:
+                        socket_list.remove(sock)
+                        sock.close()
             
 
     
