@@ -2,6 +2,9 @@ import socket
 import select
 import requests
 import re
+import mysql.connector as mariadb
+import datetime
+
 host , port = '0.0.0.0' , 4443
 
 serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -10,6 +13,12 @@ serversocket.bind((host , port))
 serversocket.listen(1)
 print('servidor en el puerto',port)
 socket_list = [serversocket]
+
+mariadb_connection = mariadb.connect(user='practica3',password='123',database= 'practica3', host='localhost',port='3306')
+
+cursor=mariadb_connection.cursor()
+
+
 while True:
     ready_to_read, ready_to_write, in_error = select.select(socket_list,[],[],10)
     for sock in ready_to_read:
@@ -33,17 +42,34 @@ while True:
                 if metodo == "POST":
                     aux_url = string_list[14]
                     aux_url = aux_url.split("=")
-                    url = aux_url[1]
+                    url_aux = aux_url[1]
+                    idioma = aux_url[2]
+                    url = url_aux.split("&")
+                    url = url[0]
                     url = re.sub("%3A",":",url) # Se sustituye %3A por :
                     url = re.sub("%2F","/",url) # Se sustituye %2F por /
-                    r = requests.get(url)
+                    if idioma=="Espanol":
+                        language = {"Accept-Language": "es-ES,es;q=0.5"}
+                        param = dict(lang='es-ES,es;q=0.5')
+                    elif idioma=="Ingles":
+                        language = {"Accept-Language": "en-US,en;q=0.5"}
+                        param = dict(lang='en-US,en;q=0.5')
+                    print(language)
+                    r = requests.get(url, headers=language, params=param)
                     r = r.text
                     header = 'HTTP/1.1 200 OK\n'
                     mimetype = 'text/html'
                     header += 'Content-Type: '+str(mimetype)+'\n\n'
                     responde = header+r
                     sock.send(responde.encode())
-
+                    
+                    #Parte de mysql
+                    dia_aux = datetime.datetime.now()
+                    dia = dia_aux.strftime("%y-%m-%d %H:%M:%S")
+                    insertar = 'INSERT INTO historial(url, date) VALUES (%s, %s)'
+                    elementos = (url, dia)
+                    cursor.execute(insertar, elementos)
+                    mariadb_connection.commit()
 
                 else:
                     if(myfile == ''):

@@ -3,9 +3,16 @@
 <body>
 <h1> BUSCADOR DE PAGINAS WEB</h1>
 
-<form action="192.168.1.120" method="post" target="_blank">
+<form action="192.168.1.115" method="post" target="_blank">
 	<label for="fname">INTRODUZCA LA URL DE LA PAGINA: </label>
+	<label for="lang">SELECCIONA IDIOMA: </label>
 	<input type="text" id="fname" name="fname"><br><br>
+	<input list="idioma" name="lang" id="lang">
+	<datalist id="lang">
+		<option value="Espanol">
+		<option value="Ingles">
+	</datalist>
+	
 	<input type="submit" value="Submit">
 </form>
 </body>
