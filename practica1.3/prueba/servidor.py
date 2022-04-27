@@ -4,7 +4,6 @@ import requests
 import re
 import mysql.connector as mariadb
 import datetime
-
 host , port = '0.0.0.0' , 4443
 
 serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -116,5 +115,5 @@ while True:
                             socket_list.remove(sock)
                             sock.close()
             
-
-    
+    if not (ready_to_read or ready_to_write or in_error):
+        print("Servidor se encuentra inactivo\n")
