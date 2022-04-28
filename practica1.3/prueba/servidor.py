@@ -39,7 +39,7 @@ while True:
                 print('Client request \n')
                 myfile=requesting_file[1:]
                 if metodo == "POST":
-                    aux_url = string_list[14]
+                    aux_url = string_list[15] #Recordar posición 14 cuando no hay cokie y 15 si hay
                     aux_url = aux_url.split("=")
                     url_aux = aux_url[1]
                     idioma = aux_url[2]
@@ -71,9 +71,9 @@ while True:
                     mariadb_connection.commit()
 
                 else:
-                    if(myfile == ''):
-                        myfile = 'index.html'
-                    elif myfile[0:3] == "htt":
+
+
+                    if myfile[0:3] == "htt":
                         r = requests.get(myfile)
                         r = r.text
                         header = 'HTTP/1.1 200 OK\n'
@@ -83,6 +83,9 @@ while True:
                         sock.send(responde.encode())
                     else:
                         try:
+
+                            if(myfile == ''):
+                                myfile = 'index.html'
                             file = open(myfile , 'rb')
                             response = file.read()
                             file.close()
